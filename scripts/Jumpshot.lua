@@ -1,3 +1,4 @@
+{
 local air_strafe = ui.reference("Misc", "Movement", "Air strafe")
 local enable_it = ui.new_checkbox("Misc", "Movement", "Jumpscout")
 
@@ -8,3 +9,4 @@ client.set_event_callback("setup_command", function(c)
         ui.set(air_strafe, not (c.in_jump and (vel < 10)) or ui.is_menu_open())
     end
 end)
+}
