@@ -1,12 +1,1 @@
-{
-local air_strafe = ui.reference("Misc", "Movement", "Air strafe")
-local enable_it = ui.new_checkbox("Misc", "Movement", "Jumpscout")
-
-client.set_event_callback("setup_command", function(c)
-    if (ui.get(enable_it)) then
-        local vel_x, vel_y = entity.get_prop(entity.get_local_player(), "m_vecVelocity")
-        local vel = math.sqrt(vel_x^2 + vel_y^2)
-        ui.set(air_strafe, not (c.in_jump and (vel < 10)) or ui.is_menu_open())
-    end
-end)
-}
+bG9jYWwgYWlyX3N0cmFmZSA9IHVpLnJlZmVyZW5jZSgiTWlzYyIsICJNb3ZlbWVudCIsICJBaXIgc3RyYWZlIikKbG9jYWwgZW5hYmxlX2l0ID0gdWkubmV3X2NoZWNrYm94KCJNaXNjIiwgIk1vdmVtZW50IiwgIkp1bXBzY291dCIpCgpjbGllbnQuc2V0X2V2ZW50X2NhbGxiYWNrKCJzZXR1cF9jb21tYW5kIiwgZnVuY3Rpb24oYykKICAgIGlmICh1aS5nZXQoZW5hYmxlX2l0KSkgdGhlbgogICAgICAgIGxvY2FsIHZlbF94LCB2ZWxfeSA9IGVudGl0eS5nZXRfcHJvcChlbnRpdHkuZ2V0X2xvY2FsX3BsYXllcigpLCAibV92ZWNWZWxvY2l0eSIpCiAgICAgICAgbG9jYWwgdmVsID0gbWF0aC5zcXJ0KHZlbF94XjIgKyB2ZWxfeV4yKQogICAgICAgIHVpLnNldChhaXJfc3RyYWZlLCBub3QgKGMuaW5fanVtcCBhbmQgKHZlbCA8IDEwKSkgb3IgdWkuaXNfbWVudV9vcGVuKCkpCiAgICBlbmQKZW5kKQ==
