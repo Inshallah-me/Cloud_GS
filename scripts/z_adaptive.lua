@@ -12,6 +12,7 @@ local client_exec = client.exec
 --------------------------------------------------------------------------------
 -- Basic Libaries
 --------------------------------------------------------------------------------
+local vector = require ("vector")
 local base64 = require("gamesense/base64")
 local clipboard = require("gamesense/clipboard")
 local http = require "gamesense/http"
@@ -685,7 +686,7 @@ local inti = {
         indicator.feature_clr_1 = ui_new_color_picker(TAB[3], TAB[4], prefix(nil, "Hide").."\nFeature Color #1", 200, 200, 200, 255)
         indicator.feature_clr_2 = ui_new_color_picker(TAB[3], TAB[4], prefix(nil, "Hide").."\nFeaturuie Color #2", 200, 200, 200, 255)
         indicator.feature_tbl = ui_new_multiselect(TAB[3], TAB[4], "\n Feature table", {
-            "Min Damage States", "Hitchance States", "Min Damage Value", "Hitchance Value", "Hitbox States"
+            "Min Damage States", "Hitchance States", "Min Damage Value", "Hitchance Value", "Hitbox States", "Lag Compensation", "AX"
         })
 
         indicator.aimbot_log = ui_new_checkbox(TAB[3], TAB[4], prefix(nil, "Index").. "Aimbot log")
@@ -1315,6 +1316,8 @@ local paint = {
             dmg_value = lib.contains(ui_get(indicator.feature_tbl), "Min Damage Value"),
             hc_value = lib.contains(ui_get(indicator.feature_tbl), "Hitchance Value"),
             hb = lib.contains(ui_get(indicator.feature_tbl), "Hitbox States"),
+            lc = lib.contains(ui_get(indicator.feature_tbl), "Lag Compensation"),
+            ax = lib.contains(ui_get(indicator.feature_tbl), "AX"),
         }
 
         local damage, state = fetch.damage(i)
@@ -1340,6 +1343,22 @@ local paint = {
         local print_screen = ind.hb and lib.get_hitbox(hitbox) or ""
         
         renderer.indicator(255, 80, 80, 255, print_screen)
+
+        local vec = vector(entity.get_prop(lp, "m_vecVelocity"))
+        local velocity = math.sqrt((vec.x * vec.x) + (vec.y * vec.y)) 
+        local lp = entity_get_local_player()
+        local in_air = entity_get_prop(lp, "m_fFlags") == 256
+        local in_air_crouch =  entity_get_prop(lp, "m_fFlags") == 262 and entity_get_prop(lp, "m_flDuckAmount") > 0.8
+        local lc_state = (ind.lc and in_air or in_air_crouch and cvar.cl_lagcompensation:get_int() == 1)
+        local lc_color = (velocity >= 270 and globals.chokedcommands() > 2) and {176, 216, 67, 255} or {255, 0, 0, 255}
+        local print_screen = (lc_state and "LC") or ""
+
+        renderer.indicator(lc_color[1], lc_color[2], lc_color[3], 255, print_screen)
+
+        local ax_state = (ind.ax and cvar.cl_lagcompensation:get_int() == 0)
+        local print_screen = (ax_state and "AX") or ""
+        
+        renderer.indicator(255, 255, 255, 255, print_screen)
     end,
 
     draw_layer_1 = function(x, y, w, h, header, a)
@@ -1569,28 +1588,28 @@ local g_callback = {
             renderer_text(x + 25 , y + 13, 204, 204, 204 - ani.debugger[5], ani.debugger[1], "b", nil, index.weapons[lib.get_weapon()])
 
             -->> Hitbox
-            paint.draw_layer_boxes(x, y + 5, ani.debugger[1], "Target Hitbox", lib.tbl_to_string(config.hitbox))
+            paint.draw_layer_boxes(x, y + 5， ani.debugger[1], "Target Hitbox", lib.tbl_to_string(config.hitbox))
 
             -->> Multipoint
-            paint.draw_layer_boxes(x, y + 5 + 38, ani.debugger[1], "Multi-point", lib.tbl_to_string(config.multipoint))
+            paint.draw_layer_boxes(x, y + 5 + 38， ani.debugger[1], "Multi-point", lib.tbl_to_string(config.multipoint))
 
             -->> Multipoint scale
-            local multipoint_index = (config.multipoint_scale < 25 and "Auto" or config.multipoint_scale.."%")
-            ani.debugger[2] = lerp(ani.debugger[2], (config.multipoint_scale) - 25, animation * globals.frametime())
-            paint.draw_layer_slider(x, y + 3 + 73, ani.debugger[1], "Multi-point Scale", ani.debugger[2], multipoint_index, 1.9)
+            local multipoint_index = (config.multipoint_scale < 25 和 "Auto" or config.multipoint_scale.."%")
+            ani.debugger[2] = lerp(ani.debugger[2], (config.multipoint_scale) - 25， animation * globals.frametime())
+            paint.draw_layer_slider(x, y + 3 + 73， ani.debugger[1], "Multi-point Scale"， ani.debugger[2], multipoint_index, 1.9)
 
             -->> Unsafe hitbox
-            paint.draw_layer_boxes(x, y + 3 + 105, ani.debugger[1], "Avoid unsafe hitboxes", lib.tbl_to_string(config.unsafe))
+            paint.draw_layer_boxes(x, y + 3 + 105， ani.debugger[1], "Avoid unsafe hitboxes", lib.tbl_to_string(config.unsafe))
 
             -->> Hitchance
-            local hitchance_index = ((config.hitchance == 0 and "Off") or config.hitchance .. "%")
+            local hitchance_index = ((config.hitchance == 0 和 "Off") or config.hitchance .. "%")
             ani.debugger[3] = lerp(ani.debugger[3], (config.hitchance), animation * globals.frametime())
-            paint.draw_layer_slider(x, y + 140, ani.debugger[1], "Hitchance", ani.debugger[3], hitchance_index, 1.45)
+            paint.draw_layer_slider(x, y + 140， ani.debugger[1], "Hitchance"， ani.debugger[3], hitchance_index, 1.45)
 
             -->> Damage
-            local damage_index = ((config.damage > 100 or config.damage == 0) and ""..index.index_dmg[config.damage]) or config.damage
+            local damage_index = ((config.damage > 100 or config.damage == 0) 和 ""..index.index_dmg[config.damage]) or config.damage
             ani.debugger[4] = lerp(ani.debugger[4], (config.damage), animation * globals.frametime())
-            paint.draw_layer_slider(x, y + 165, ani.debugger[1], "Mindamage",  ani.debugger[4], damage_index, 1.15)
+            paint.draw_layer_slider(x, y + 165， ani.debugger[1], "Mindamage"，  ani.debugger[4], damage_index, 1.15)
         end
 
         local paint_callback = function()
@@ -1623,7 +1642,7 @@ local g_callback = {
             end
         end
 
-        client.set_event_callback("aim_hit", aim_hit_callback)
+        client.set_event_callback("aim_hit"， aim_hit_callback)
 
         local aim_miss_callback = function(e)
             local enable = ui_get(main.enable)
@@ -1633,7 +1652,7 @@ local g_callback = {
             end
         end
 
-        client.set_event_callback("aim_miss", aim_miss_callback)
+        client.set_event_callback("aim_miss"， aim_miss_callback)
 
         local command_callback = function(cmd)
             local enable = ui_get(main.enable)
@@ -1651,4 +1670,3 @@ local g_callback = {
 }
 
 g_callback.call()
-
