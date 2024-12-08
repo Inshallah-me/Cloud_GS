@@ -4,9 +4,9 @@
 
 function renderer_background(x, y, w, h, r, g, b, a)
 	renderer.rectangle(x - 20, y - 20, w, 2, r, g, b, a)
-	renderer.rectangle(x - 20, y - 20, 2, h, r, g, b, a)
+	renderer.rectangle(x - 20, y - 20, 2， h, r, g, b, a)
 	renderer.rectangle(x - 20, y - 20 + h, w, 2, r, g, b, a)
-	renderer.rectangle(x - 20 + w, y - 20, 2, h + 2, r, g, b, a)
+	renderer.rectangle(x - 20 + w, y - 20, 2， h + 2, r, g, b, a)
 end
 
 force_onehp = "X"
@@ -1068,7 +1068,7 @@ local default_sources = {
 		name = "CN Helper",
 		id = "NULL",
 		type = "remote",
-		url = "https://cdn.jsdelivr.net/gh/Inshallah-me/Cloud_GS@refs/heads/main/cnhelper.json",
+		url = "https://cdn.jsdelivr.net/gh/Inshallah-me/Cloud_GS@refs/heads/main/configs/cnhelper.json"，
 		description = "中文Helper",
 		builtin = true
 	}
