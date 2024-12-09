@@ -186,7 +186,7 @@ return (function(tbl)
                 team = ui.new_combobox("aa", "anti-aimbot angles", "\nteam", {"ct", "t"})
             },
             ["keybinds"] = {
-                keys = ui.new_multiselect("aa", "anti-aimbot angles", prefix("keys"), {"manual", "edge", "teleport"，"freestand"}),
+                keys = ui.new_multiselect("aa", "anti-aimbot angles", prefix("keys"), {"manual", "edge", "teleport","freestand"}),
                 left = ui.new_hotkey("aa", "anti-aimbot angles", prefix("left")),
                 right = ui.new_hotkey("aa", "anti-aimbot angles", prefix("right")),
                 forward = ui.new_hotkey("aa", "anti-aimbot angles", prefix("forward")),
