@@ -186,7 +186,7 @@ return (function(tbl)
                 team = ui.new_combobox("aa", "anti-aimbot angles", "\nteam", {"ct", "t"})
             },
             ["keybinds"] = {
-                keys = ui.new_multiselect("aa", "anti-aimbot angles", prefix("keys"), {"manual", "edge", "teleport","freestand"}),
+                keys = ui.new_multiselect("aa", "anti-aimbot angles", prefix("keys"), {"manual", "edge", ""，"freestand"}),
                 left = ui.new_hotkey("aa", "anti-aimbot angles", prefix("left")),
                 right = ui.new_hotkey("aa", "anti-aimbot angles", prefix("right")),
                 forward = ui.new_hotkey("aa", "anti-aimbot angles", prefix("forward")),
@@ -698,11 +698,11 @@ return (function(tbl)
                 return nil
             end
             if ui.get(menu["anti aimbot"]["keybinds"]["teleport"]) then
-                --arg.discharge_pending = true
-                ui.set(tbl.refs.dt[1], false)
+                arg.discharge_pending = true
+                --ui.set(tbl.refs.dt[1], false)
                 client.delay_call(0.1, function()
-                    --arg.discharge_pending = true    
-                    ui.set(tbl.refs.dt[1], true)
+                    arg.discharge_pending = true    
+                    --ui.set(tbl.refs.dt[1], true)
                 end)
             end
             if ui.get(menu["anti aimbot"]["features"]["backstab"]) ~= "off" and enemy ~= nil then
