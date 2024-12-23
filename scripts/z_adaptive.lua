@@ -211,7 +211,7 @@ local lib = {
     end,
 
     is_double_tapping = function()
-        local doubletap = {ui.reference("RAGE", "Other", "Double Tap")}
+        local doubletap = {ui.reference("RAGE", "Aimbot", "Double Tap")}
         return (ui_get(doubletap[2]))
     end,
 
