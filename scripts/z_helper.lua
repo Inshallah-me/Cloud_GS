@@ -1,16 +1,8 @@
-	--
+--
 -- dependencies
 --
 
-function renderer_background(x, y, w, h, r, g, b, a)
-	renderer.rectangle(x - 20, y - 20, w, 2, r, g, b, a)
-	renderer.rectangle(x - 20, y - 20, 2, h, r, g, b, a)
-	renderer.rectangle(x - 20, y - 20 + h, w, 2, r, g, b, a)
-	renderer.rectangle(x - 20 + w, y - 20, 2, h + 2, r, g, b, a)
-end
-
-force_onehp = "X"
-helper_datas_chinese = {
+local helper_datas_chinese = {
 	["L"] = "左",
 	["R"] = "右",
 	["YQ"] = "右墙",
@@ -1056,52 +1048,21 @@ helper_datas_chinese = {
     ["KLT ADWDY"] = "帮弯道灭火",
 }
 
-
 local http = require "gamesense/http"
 local weapons = require "gamesense/csgo_weapons"
 local easing = require "gamesense/easing"
 local pretty_json = require "gamesense/pretty_json"
 local images = require "gamesense/images"
 local table_gen = require "gamesense/table_gen"
-local default_sources = {
-	{
-		name = "CN Helper",
-		id = "NULL",
-		type = "remote",
-		url = "https://cdn.jsdelivr.net/gh/Inshallah-me/Cloud_GS@master/configs/cnhelper.json",
-		description = "中文Helper",
-		builtin = true
-	}
-}
+local surface = require "gamesense/surface"
 
---helper_datas_chinese = database_load()[1]
 local table_clear = require "table.clear"
 local vector = require "vector"
 
 --
 -- debug mode
 --
-error_debug = false
-loader_reserve = false
-client.delay_call(10, function()
-	if default_sources == nil or helper_datas_chinese == nil then
-		loader_reserve = true
-	end
-end)
 
-client.set_event_callback("paint_ui", function()
---	local get_datas = database_load()
-	if helper_datas_chinese == nil or (type(helper_datas_chinese) == "table" and #helper_datas_chinese == 0) then
---		helper_datas_chinese = loader_reserve and get_datas[3] or get_datas[1]
-	end
-
-	if not error_debug and loader_reserve and (default_sources == nil or helper_datas_chinese == nil) then
-		print("Load Chinese Helpers Not Found")
-		error_debug = true
-	end
-end)
-
-surface = require "gamesense/surface"
 surface_fontlist = {}
 local function surface_createfont(name, size)
 	local cache_key = string.format("%s %s", name, size)
@@ -1111,7 +1072,6 @@ local function surface_createfont(name, size)
 
 	return surface_fontlist[cache_key]
 end
-
 
 local DEBUG
 if false then
@@ -1143,7 +1103,6 @@ local LOCATION_TYPE_NAMES = {
 }
 
 local YAW_DIRECTION_OFFSETS = {
-	Off = 0,
 	Forward = 0,
 	Back = 180,
 	Left = 90,
@@ -1250,7 +1209,7 @@ local DEFAULTS = {
 	fov = 0.7,
 	fov_movement = 0.1,
 	select_fov_legit = 8,
-	select_fov_rage = 90,
+	select_fov_rage = 25,
 	max_dist = 6,
 	destroy_text = "Break the object",
 	source_ttl = 5
@@ -1288,13 +1247,6 @@ local approach_accurate_OFFSETS_END = {
 	vector(0, approach_accurate_PLAYER_RADIUS*2, 0),
 	vector(-approach_accurate_PLAYER_RADIUS*2, 0, 0),
 	vector(0, -approach_accurate_PLAYER_RADIUS*2, 0),
-}
-local POSITION_INACCURATE_OFFSETS = {
-	vector(0, 0, 0),
-	vector(8, 0, 0),
-	vector(-8, 0, 0),
-	vector(0, 8, 0),
-	vector(0, -8, 0),
 }
 
 --
@@ -1425,15 +1377,6 @@ local function lerp(a, b, percentage)
 	return a + (b - a) * percentage
 end
 
-local function table_contains(tbl, val)
-	for i = 1, #tbl do
-		if tbl[i] == val then
-			return true
-		end
-	end
-	return false
-end
-
 local function lerp_color(r1, g1, b1, a1, r2, g2, b2, a2, percentage)
 	if percentage == 0 then
 		return r1, g1, b1, a1
@@ -1538,12 +1481,6 @@ local function vector2_dist(x1, y1, x2, y2)
 	return math.sqrt(dx*dx + dy*dy)
 end
 
-local function reset_cvar(cvar)
-	local val = tonumber(cvar:get_string())
-	cvar:set_raw_int(val)
-	cvar:set_raw_float(val)
-end
-
 local function triangle_rotated(x, y, width, height, angle, r, g, b, a)
 	local a_x, a_y = vector2_rotate(angle, width/2, 0)
 	local b_x, b_y = vector2_rotate(angle, 0, height)
@@ -1629,9 +1566,6 @@ local function format_duration(secs, ignore_seconds, max_parts)
 		secs = math.floor(secs)
 		return dur .. secs .. (secs > 1 and " seconds" or " second")
 	end
-end
-
-local function console_log_json(str)
 end
 
 local function is_grenade_being_thrown(weapon, cmd)
@@ -1777,52 +1711,6 @@ local function world_to_screen_offscreen_rect(x, y, z, matrix, screen_width, scr
 				 (i == 9 and wx < cd and i_y >= cd and i_y <= screen_height-cd) or
 				 (i == 13 and wy > screen_height-cd and i_x >= cd and i_x <= screen_width-cd) then
 				return i_x, i_y, false
-			end
-		end
-
-		return wx, wy, false
-	end
-
-	return wx, wy, true
-end
-
-local function world_to_screen_offscreen_rect_2(x, y, z, matrix, screen_width, screen_height, cd)
-	local wx, wy, in_front = world_to_screen_offscreen(x, y, z, matrix, screen_width, screen_height)
-
-	if wx == nil then
-		return
-	end
-
-	if not in_front or cd > wx or wx > screen_width-cd or cd > wy or wy > screen_height-cd then
-		local cx, cy = screen_width/2, screen_height/2
-		-- renderer.line(cx, cy, wx, wy, 255, 0, 0, 255)
-
-		if not in_front then
-			local angle = math.atan2(wy-cy, wx-cx)
-
-			local radius = math.max(screen_width, screen_height)
-			wx = cx + radius * math.cos(angle)
-			wy = cy + radius * math.sin(angle)
-		end
-
-		-- renderer.text(150, 150, 255, 255, 255, 255, nil, 0, ww)
-		-- renderer.line(cx, cy, wx, wy, 255, 255, 255, 0)
-
-		local border_vectors = {
-			cd, cd, screen_width-cd, cd,
-			screen_width-cd, cd, screen_width-cd, screen_height-cd
-		}
-
-		for i=1, #border_vectors, 4 do
-			local s_x, s_y, e_x, e_y = border_vectors[i], border_vectors[i+1], border_vectors[i+2], border_vectors[i+3]
-			local i_x, i_y = line_intersection(s_x, s_y, e_x, e_y, cx, cy, wx, wy)
-
-			renderer.rectangle(i_x-4, i_y-4, 8, 8, 255, 0, 0, 255)
-
-			if (i == 1 and wy < cd and i_x >= cd and i_x <= screen_width-cd) or
-				 (i == 5 and wx > screen_width-cd and i_y >= cd and i_y <= screen_height-cd) then
-				return i_x, i_y, false
-			elseif (i == 1 and false) then
 			end
 		end
 
@@ -2078,7 +1966,7 @@ local MAP_PATTERNS = {
 
 local MAP_LOOKUP = {
 	de_shortnuke = "de_nuke",
-	-- de_shortdust = "de_shortnuke",
+	de_shortdust = "de_shortnuke",
 }
 
 local mapname_cache = {}
@@ -2204,6 +2092,16 @@ db.sources = db.sources or {}
 benchmark:finish("db_read")
 
 -- setup default sources
+local default_sources = {
+	{
+		name = "CN Helper",
+		id = "NULL",
+		type = "remote",
+		url = "https://cdn.jsdelivr.net/gh/Inshallah-me/Cloud_GS@master/configs/cnhelper.json",
+		description = "中文Helper",
+		builtin = true
+	}
+}
 
 -- first remove all default sources and some old ones
 local removed_sources = {
@@ -3243,10 +3141,10 @@ local source_mt = {
 						update_sources_ui()
 						flush_active_locations("C")
 					end)
-				else
+				--[[else
 					if locations == nil then
 						-- print("failed to fetch locations for: ", inspect(self))
-					end
+					end]]
 				end
 
 				sources_locations[self][mapname] = locations or {}
@@ -3380,11 +3278,12 @@ local air_duck_reference = ui.reference("MISC", "Movement", "Air duck")
 local infinite_duck_reference = ui.reference("MISC", "Movement", "Infinite duck")
 local aa_enabled_reference = ui.reference("AA", "Anti-aimbot angles", "Enabled")
 local aa_pitch_reference = ui.reference("AA", "Anti-aimbot angles", "Pitch")
+local super_toss = ui.reference("Misc", "Miscellaneous", "Super toss")
+local double_tap = ui.reference("RAGE", "aimbot", "Double tap")
+local osaa = ui.reference("AA", "Other", "On shot anti-aim")
 
---
 -- normal menu items
 --
-
 
 local enabled_reference = ui.new_checkbox("VISUALS", "Other ESP", "Helper")
 local hotkey_reference = ui.new_hotkey("VISUALS", "Other ESP", "Helper hotkey", true)
@@ -3451,7 +3350,7 @@ local edit_ui = {
 	run_direction_custom = ui.new_slider("LUA", "B", "\nCustom run direction", -180, 180, 0, true, "°"),
 	run_duration = ui.new_slider("LUA", "B", "\nRun duration", 1, 256, 20, true, "t"),
 	delay = ui.new_slider("LUA", "B", "Throw delay", 1, 40, 0, true, "t"),
-	recovery_direction = ui.new_combobox("LUA", "B", "Recovery (after throw) direction", {"Off", "Back", "Forward", "Left", "Right", "Custom"}),
+	recovery_direction = ui.new_combobox("LUA", "B", "Recovery (after throw) direction", {"Back", "Forward", "Left", "Right", "Custom"}),
 	recovery_direction_custom = ui.new_slider("LUA", "B", "\nCustom recovery direction", -180, 180, 0, true, "°"),
 	recovery_jump = ui.new_checkbox("LUA", "B", "Recovery bunny-hop"),
 	set = ui.new_button("LUA", "B", "Set location", function() on_edit_set() end),
@@ -4211,6 +4110,7 @@ function edit_set_ui_values(force)
 
 	if location_tbl.grenade ~= nil then
 		ui.set(edit_ui.type, "Grenade")
+
 		ui.set(edit_ui.recovery_direction, yaw_to_name[180])
 		ui.set(edit_ui.recovery_direction_custom, 0)
 		ui.set(edit_ui.recovery_jump, false)
@@ -4820,10 +4720,10 @@ local function on_paint_editing()
 		local y = 140
 
 		-- draw background
-		-- renderer.rectangle(x-4, y-3, width+8, height+6, 16, 16, 16, 150*0.7)
-		--rectangle_outline(x-5, y-4, width+10, height+8, 16, 16, 16, 170*0.7)
-		--rectangle_outline(x-6, y-5, width+12, height+10, 16, 16, 16, 195*0.7)
-		--rectangle_outline(x-7, y-6, width+14, height+12, 16, 16, 16, 40*0.7)
+		renderer.rectangle(x-4, y-3, width+8, height+6, 16, 16, 16, 150*0.7)
+		rectangle_outline(x-5, y-4, width+10, height+8, 16, 16, 16, 170*0.7)
+		rectangle_outline(x-6, y-5, width+12, height+10, 16, 16, 16, 195*0.7)
+		rectangle_outline(x-7, y-6, width+14, height+12, 16, 16, 16, 40*0.7)
 
 		ICON_EDIT:draw(x, y, 12, 12)
 		renderer.rectangle(x+15, y, 1, 12, 255, 255, 255, 255)
@@ -5105,7 +5005,7 @@ local playback_data = {}
 -- restore disabled menu elements
 local ui_restore = {}
 
-local function restore_disabled()
+local function star()
 	for key, value in pairs(ui_restore) do
 		ui.set(key, value)
 	end
@@ -5130,7 +5030,7 @@ local function on_paint()
 
 		if location_playback ~= nil then
 			location_playback = nil
-			restore_disabled()
+			star()
 		end
 
 		return
@@ -5142,7 +5042,7 @@ local function on_paint()
 
 		if location_playback ~= nil then
 			location_playback = nil
-			restore_disabled()
+			star()
 		end
 
 		return
@@ -5154,7 +5054,7 @@ local function on_paint()
 
 		if location_playback ~= nil then
 			location_playback = nil
-			restore_disabled()
+			star()
 		end
 
 		return
@@ -5203,8 +5103,10 @@ local function on_paint()
 
 	if location_playback ~= nil and (not hotkey or not entity.is_alive(local_player) or entity.get_prop(local_player, "m_MoveType") == 8) then
 		location_playback = nil
-		restore_disabled()
+		star()
 	end
+
+
 
 	if source_editing then
 		on_paint_editing()
@@ -5447,12 +5349,6 @@ local function on_paint()
 							end
 						end
 
-						-- actually draw stuff: background
-						-- renderer.rectangle(wx_topleft-2, wy_topleft-2, full_width+4, full_height+4, 16, 16, 16, 180*visible_alpha)
-						--rectangle_outline(wx_topleft-3, wy_topleft-3, full_width+6, full_height+6, 16, 16, 16, 170*visible_alpha)
-						--rectangle_outline(wx_topleft-4, wy_topleft-4, full_width+8, full_height+8, 16, 16, 16, 195*visible_alpha)
-						--rectangle_outline(wx_topleft-5, wy_topleft-5, full_width+10, full_height+10, 16, 16, 16, 40*visible_alpha)
-
 						local r_m, g_m, b_m = r_m, g_m, b_m
 						if location_set[1].editing and #location_set == 1 then
 							r_m, g_m, b_m = unpack(CLR_TEXT_EDIT)
@@ -5461,7 +5357,7 @@ local function on_paint()
 						if location_set.distance_width_mp > 0 then
 							if width_icon ~= nil then
 								-- draw divider
-								-- renderer.rectangle(wx_topleft+width_icon+3, wy_topleft+2, 1, full_height-3, r_m, g_m, b_m, a_m*visible_alpha) -- Background
+								surface.draw_filled_rect(wx_topleft+width_icon+3, wy_topleft+2, 1, full_height-3, r_m, g_m, b_m, a_m*visible_alpha)
 							end
 
 							-- draw text lines vertically centered
@@ -5478,13 +5374,8 @@ local function on_paint()
 									break
 								end
 
-								local flower_x_point = _x
-								local flower_y_point = _y
 								local surface_text = tostring(helper_datas_chinese[string.upper(text)] or text) or text
 								local width, height = surface.get_text_size(old_font, surface_text)
-								-- renderer.text(_x, _y, r, g, b, a, flags, 0, text) -- Renderer Local Data
-								-- renderer_background(_x, _y, 15 + width, 35, 0, 0, 0, math.min(a, 150))
-								-- renderer.rectangle(_x, _y, width, height, 0, 0, 0, 150)
 								surface.draw_filled_rect(_x - 32, _y - 7, width + 40, height + 12, 0, 0, 0, 70)
 								surface.draw_filled_rect(_x - 7, _y, 2, height, r, g, b, a)
 								surface.draw_text(_x, _y, r, g, b, a, old_font, surface_text)
@@ -5494,6 +5385,7 @@ local function on_paint()
 						-- draw icon
 						if icon ~= nil then
 							local outline_size = math.min(2, full_height*0.03)
+
 							local outline_a_mp = 1
 							if outline_size > 0.6 and outline_size < 1 then
 								outline_a_mp = (outline_size-0.6)/0.4
@@ -5688,10 +5580,10 @@ local function on_paint()
 
 							local background_mp = easing.sine_out(visible_alpha, 0, 1, 1)
 
-							-- renderer.rectangle(wx_topleft-2, wy_topleft-2, full_width+4, full_height+4, 16, 16, 16, 150*background_mp)
-							-- rectangle_outline(wx_topleft-3, wy_topleft-3, full_width+6, full_height+6, 16, 16, 16, 170*background_mp)
-							-- rectangle_outline(wx_topleft-4, wy_topleft-4, full_width+8, full_height+8, 16, 16, 16, 195*background_mp)
-							-- rectangle_outline(wx_topleft-5, wy_topleft-5, full_width+10, full_height+10, 16, 16, 16, 40*background_mp)
+							renderer.rectangle(wx_topleft-2, wy_topleft-2, full_width+4, full_height+4, 16, 16, 16, 150*background_mp)
+							rectangle_outline(wx_topleft-3, wy_topleft-3, full_width+6, full_height+6, 16, 16, 16, 170*background_mp)
+							rectangle_outline(wx_topleft-4, wy_topleft-4, full_width+8, full_height+8, 16, 16, 16, 195*background_mp)
+							rectangle_outline(wx_topleft-5, wy_topleft-5, full_width+10, full_height+10, 16, 16, 16, 40*background_mp)
 
 							if not on_screen then
 								local triangle_alpha = 1 - location.on_screen_mp
@@ -5762,18 +5654,12 @@ local function on_paint()
 
 							-- divider
 							if target_size > 1 then
-								-- renderer.rectangle(wx_topleft+target_size-4*dpi_scale, wy_topleft+1, 1, full_height-1, r_m, g_m, b_m, a_m*visible_alpha*location.on_screen_mp)
+								renderer.rectangle(wx_topleft+target_size-4*dpi_scale, wy_topleft+1, 1, full_height-1, r_m, g_m, b_m, a_m*visible_alpha*location.on_screen_mp)
 							end
 
 							-- text
-							-- renderer.text(wx_topleft+target_size, wy, r_m, g_m, b_m, a_m*visible_alpha, "bd", 0, name)
-
-							local flower_x_point_2 = 0
-							local flower_y_point_2 = 0
 							local surface_name = tostring(helper_datas_chinese[string.upper(location.name)] or location.name) or location.name
 							local width, height = surface.get_text_size(old_font, surface_name)
-							-- renderer_background(wx_topleft+target_size, wy, 15 + width, 35, 0, 0, 0, math.min(a_m*visible_alpha, 150))
-							-- renderer.rectangle(wx_topleft+target_size, wy, width, height, 0, 0, 0, 150)
 							surface.draw_filled_rect(wx_topleft+target_size - 32, wy - 5, width + 40, height + 10, 0, 0, 0, 70)
 							surface.draw_filled_rect(wx_topleft+target_size - 7, wy, 2, height + 1, r_m, g_m, b_m, a_m*visible_alpha)
 							surface.draw_text(wx_topleft+target_size, wy, r_m, g_m, b_m, a_m*visible_alpha, old_font, surface_name)
@@ -5873,7 +5759,7 @@ local function cmd_location_playback_grenade(cmd, local_player, weapon)
 				client.error_log("[helper] playback timed out")
 
 				location_playback = nil
-				restore_disabled()
+				star()
 			end
 		end)
 	end
@@ -5881,7 +5767,7 @@ local function cmd_location_playback_grenade(cmd, local_player, weapon)
 	if weapon ~= playback_weapon and playback_state ~= GRENADE_PLAYBACK_FINISHED then
 		location_playback = nil
 
-		restore_disabled()
+		star()
 
 		return
 	end
@@ -5968,7 +5854,7 @@ local function cmd_location_playback_grenade(cmd, local_player, weapon)
 				playback_state = nil
 				location_playback = nil
 
-				restore_disabled()
+				star()
 			else
 				local aimbot = ui.get(aimbot_reference)
 
@@ -6008,7 +5894,7 @@ local function cmd_location_playback_grenade(cmd, local_player, weapon)
 			else
 				location_playback = nil
 
-				restore_disabled()
+				star()
 			end
 		end
 	end
@@ -6023,10 +5909,19 @@ local function cmd_location_playback_grenade(cmd, local_player, weapon)
 			ui_restore[auto_release_reference] = true
 			ui.set(auto_release_reference, false)
 		end
+		if ui.get(super_toss) then
+			ui_restore[super_toss] = true
+			ui.set(super_toss, false)
+		end
 
-		if ui.get(ui.reference("MISC", "Miscellaneous", "Super toss")) then
-			ui_restore[ui.reference("MISC", "Miscellaneous", "Super toss")] = true
-			ui.set(ui.reference("MISC", "Miscellaneous", "Super toss"), false)
+		if ui.get(osaa) then
+			ui_restore[osaa] = true
+			ui.set(osaa, false)
+		end
+
+		if ui.get(double_tap) then
+			ui_restore[double_tap] = true
+			ui.set(double_tap, false)
 		end
 
 		if ui.get(quick_peek_assist_reference) then
@@ -6081,7 +5976,7 @@ local function cmd_location_playback_grenade(cmd, local_player, weapon)
 			end
 
 			-- just a little failsafe to make sure we turn stuff back on
-			client.delay_call(0.8, restore_disabled)
+			client.delay_call(0.8, star)
 		elseif entity.get_prop(weapon, "m_fThrowTime") == 0 and playback_data.thrown_at ~= nil and playback_data.thrown_at > playback_data.throw_at then
 			playback_state = GRENADE_PLAYBACK_FINISHED
 
@@ -6091,7 +5986,7 @@ local function cmd_location_playback_grenade(cmd, local_player, weapon)
 				if playback_state == GRENADE_PLAYBACK_FINISHED and playback_begin == begin then
 					location_playback = nil
 
-					restore_disabled()
+					star()
 				end
 			end)
 		end
@@ -6112,7 +6007,7 @@ local function cmd_location_playback_movement(cmd, local_player, weapon)
 
 	if weapon ~= playback_weapon and not (is_grenade and current_weapon.type == "knife") then
 		location_playback = nil
-		restore_disabled()
+		star()
 		return
 	end
 
@@ -6121,7 +6016,7 @@ local function cmd_location_playback_movement(cmd, local_player, weapon)
 
 	if command == nil then
 		location_playback = nil
-		restore_disabled()
+		star()
 		return
 	end
 
@@ -6201,6 +6096,7 @@ local function cmd_location_playback_movement(cmd, local_player, weapon)
 	-- cmd.yaw = cmd.move_yaw-180
 
 	if aimbot == "Rage" and aa_enabled and (is_grenade or (cmd.in_attack == 0 and cmd.in_attack2 == 0)) and (not is_grenade or (is_grenade and playback_data.thrown_at == nil)) then
+
 		if cmd.command_number - playback_data.last_offset_swap > 16 then
 			local _, target_yaw = normalize_angles(0, cmd.in_use == 1 and cmd.yaw or cmd.yaw - 180)
 			playback_data.set_pitch = cmd.in_use == 0
@@ -6247,12 +6143,13 @@ local function cmd_location_playback_movement(cmd, local_player, weapon)
 		playback_sensitivity_set = true
 	elseif (is_grenade and current_weapon.type == "grenade") and aimbot == "Rage" and is_grenade_being_thrown(weapon, cmd) then
 		-- client.camera_angles(command.pitch, command.yaw)
-
+		
 		cmd.pitch = command.pitch
 		cmd.yaw = command.yaw
 		cmd.allow_send_packet = false
 
 		playback_data.thrown_at = cmd.command_number
+
 	end
 
 	if DEBUG then
@@ -6599,7 +6496,8 @@ client.set_event_callback("level_init", function()
 			else
 				DEBUG.debug_text = "DONE!"
 				client.log("Done!")
-		
+				client.log(DEBUG.inspect(MAP_PATTERNS))
+				client.log("failed: ", DEBUG.inspect(DEBUG.create_map_patterns_failed))
 				DEBUG.create_map_patterns = false
 			end
 		else
@@ -6613,9 +6511,10 @@ end)
 
 client.set_event_callback("round_end", function()
 	location_playback = nil
+	print("unvierse best aa")
 end)
 
-client.set_event_callback("shutdown", function()
+client.set_event_callback("shutdown"， function()
 	-- clear metatables
 	for i=1, #db.sources do
 		if db.sources[i].cleanup ~= nil then
@@ -6623,7 +6522,7 @@ client.set_event_callback("shutdown", function()
 		end
 	end
 
-	restore_disabled()
+	star()
 
 	benchmark:start("db_write")
 	database.write("helper", db)
